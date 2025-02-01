@@ -42,12 +42,20 @@ fun AppUI() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Stop Short Videos", style = MaterialTheme.typography.headlineMedium)
+        Text(
+            text = "Stop Short Videos",
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground // This ensures the color adapts to the current theme
+        )
 
         Spacer(modifier = Modifier.height(20.dp))
 
         if (isEnabled) {
-            Text(text = "Accessibility Service is Enabled!", style = MaterialTheme.typography.bodyLarge)
+            Text(
+                text = "Accessibility Service is Enabled!",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onBackground // Same here for automatic color change
+            )
         } else {
             Button(onClick = {
                 val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
