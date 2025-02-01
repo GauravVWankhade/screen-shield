@@ -1,0 +1,45 @@
+# Android Studio
+.idea/
+.gradle/
+local.properties
+*.iml
+
+# Built application files
+*.apk
+*.ap_
+
+# Files for storing generated code
+build/
+captures/
+
+# Android Profiler
+*.hprof
+
+# Log files
+*.log
+
+# Android generated files
+bin/
+gen/
+out/
+
+# Gradle wrapper files
+gradle-wrapper.jar
+gradle-wrapper.properties
+
+# Keystore files
+*.jks
+*.keystore
+
+# Android Studio specific cache files
+.android/
+.idea/
+
+# Android project files
+*.orig
+*.rej
+*.bak
+
+# User-specific files
+*.swp
+*~

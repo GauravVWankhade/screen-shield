@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Shorts Blocker</string>
+    <string name="accessibility_service_description">This service helps to block short videos</string>
+</resources>
