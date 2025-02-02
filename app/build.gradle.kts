@@ -3,16 +3,18 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
 }
 
+
 android {
     namespace = "com.gvw.shortsblocker"
     compileSdk = 34
+
 
     defaultConfig {
         applicationId = "com.gvw.shortsblocker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 1000
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -22,7 +24,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.2" // Keep this version as per your Compose version
+        kotlinCompilerExtensionVersion = "1.5.2"
     }
 
     compileOptions {
@@ -33,11 +35,27 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+
+    signingConfigs {
+        create("release") {
+            storeFile = file("my-release-key.jks")  // Ensure the file path is correct
+            storePassword = project.findProperty("KEYSTORE_PASSWORD") as String? ?: ""
+            keyAlias = project.findProperty("KEY_ALIAS") as String? ?: ""
+            keyPassword = project.findProperty("KEY_PASSWORD") as String? ?: ""
+        }
+    }
+
+
+    buildTypes {
+        release {
+            isMinifyEnabled = false
+            signingConfig = signingConfigs.getByName("release") // Correct way to assign signing config
+        }
+    }
 }
 
 dependencies {
-    // Update Kotlin version to 1.9.10
-    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10") // Kotlin version 1.9.10
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:1.9.10")
 
     implementation(libs.androidx.core.ktx)
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
