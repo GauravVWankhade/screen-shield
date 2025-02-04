@@ -4,6 +4,9 @@
     package="com.gvw.shortsblocker">
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
 
     <application
         android:allowBackup="true"
@@ -28,11 +31,11 @@
             </intent-filter>
         </activity>
 
-        <!-- Accessibility Service declaration -->
         <service
             android:name=".accessibility.VideoBlockerService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
-            android:exported="true">
+            android:exported="true"
+            android:foregroundServiceType="mediaProjection">
             <intent-filter>
                 <action android:name="android.accessibilityservice.AccessibilityService" />
             </intent-filter>
@@ -41,7 +44,5 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/accessibility_service_config" />
         </service>
-
     </application>
-
 </manifest>
