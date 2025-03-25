@@ -1,6 +1,5 @@
 package com.gvw.shortsblocker.ui
 
-import AccessibilityStatusReceiver
 import android.Manifest
 import android.content.BroadcastReceiver
 import android.content.Context
@@ -20,70 +19,70 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import android.content.IntentFilter
+import android.content.pm.PackageManager
 import android.provider.Settings
+import android.util.Log
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.gvw.shortsblocker.receiver.AccessibilityStatusReceiver
 import com.gvw.shortsblocker.ui.theme.StopShortVideosTheme
 
 class MainActivity : ComponentActivity() {
+    private lateinit var screenReceiver: BroadcastReceiver
+    private val isEnabled: Boolean
+        get() = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+            .getBoolean("is_enabled", false)
 
-    private lateinit var receiver: AccessibilityStatusReceiver
-
-    private val requestNotificationPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
-            if (isGranted) {
-                val intent = Intent("com.gvw.shortsblocker.REQUEST_NOTIFICATION_PERMISSION")
-                sendBroadcast(intent)
-            } else {
-                val intent = Intent(
-                    Intent.ACTION_VIEW,
-                    Uri.parse("package:${packageName}")
-                )
-                startActivity(intent)
-            }
-        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            var isEnabled by remember { mutableStateOf(false) }
-            val context = LocalContext.current
-
-            // Receiver listens for changes in service status
-            receiver = AccessibilityStatusReceiver { enabled ->
-                isEnabled = enabled
-            }
-
-            DisposableEffect(Unit) {
-                val filter = IntentFilter("com.gvw.shortsblocker.ACCESSIBILITY_STATUS")
-                context.registerReceiver(receiver, filter)
-                onDispose {
-                    context.unregisterReceiver(receiver)
-                }
-            }
-
             StopShortVideosTheme {
-                AppUI(isEnabled, context)
-            }
-        }
-    }
-
-    private val notificationPermissionReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context, intent: Intent) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                requestNotificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+                StopShortVideosTheme {
+                    AppUI(isEnabled, context=this)
+                }
             }
         }
     }
 
     override fun onStart() {
         super.onStart()
-        registerReceiver(notificationPermissionReceiver, IntentFilter("com.gvw.shortsblocker.REQUEST_NOTIFICATION_PERMISSION"))
+        registerScreenReceiver()
     }
 
     override fun onStop() {
         super.onStop()
-        unregisterReceiver(notificationPermissionReceiver)
+        unregisterScreenReceiver()
+    }
+
+    private fun registerScreenReceiver() {
+        screenReceiver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                if (intent?.action == Intent.ACTION_SCREEN_ON) {
+                    Log.d("MainActivity", "Screen turned on")
+                }
+            }
+        }
+
+        val filter = IntentFilter(Intent.ACTION_SCREEN_ON)
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(screenReceiver, filter, Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(screenReceiver, filter)
+        }
+    }
+
+
+    private fun unregisterScreenReceiver() {
+        try {
+            unregisterReceiver(screenReceiver)
+        } catch (e: IllegalArgumentException) {
+            Log.e("MainActivity", "Receiver not registered", e)
+        }
     }
 }
+
 
 @Composable
 fun AppUI(isEnabled: Boolean, context: Context) {

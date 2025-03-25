@@ -14,8 +14,11 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import androidx.core.app.NotificationCompat
 import androidx.core.content.ContextCompat
-import com.gvw.shortsblocker.ui.MainActivity
 import com.gvw.shortsblocker.R
+import com.gvw.shortsblocker.ui.MainActivity
+import com.gvw.shortsblocker.ui.PermissionRequestActivity
+
+
 
 class VideoBlockerService : AccessibilityService() {
 
@@ -26,7 +29,13 @@ class VideoBlockerService : AccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        sendServiceStatus(true)
+        val intent = Intent(
+            this,
+            PermissionRequestActivity::class.java
+        )
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // Required when starting from a service
+        startActivity(intent)
+        sendAccessibilityStatusBroadcast(true)  // Accessibility Service is enabled
         showStatusBarIcon()
     }
 
@@ -42,11 +51,16 @@ class VideoBlockerService : AccessibilityService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        sendServiceStatus(false)
+        sendAccessibilityStatusBroadcast(false)  // Accessibility Service is disabled
         stopForeground(true) // Remove the icon from the status bar
     }
 
-    private fun sendServiceStatus(isEnabled: Boolean) {
+    override fun onUnbind(intent: Intent?): Boolean {
+        sendAccessibilityStatusBroadcast(false)  // Accessibility Service is disabled
+        return super.onUnbind(intent)
+    }
+
+    private fun sendAccessibilityStatusBroadcast(isEnabled: Boolean) {
         val intent = Intent("com.gvw.shortsblocker.ACCESSIBILITY_STATUS")
         intent.putExtra("isEnabled", isEnabled)
         sendBroadcast(intent)
@@ -55,7 +69,6 @@ class VideoBlockerService : AccessibilityService() {
     private fun showStatusBarIcon() {
         Log.d("VideoBlockerService", "Showing status bar icon")
 
-        // Create a notification channel (required for Android 8.0+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
@@ -67,39 +80,35 @@ class VideoBlockerService : AccessibilityService() {
             notificationManager.createNotificationChannel(channel)
         }
 
-        // Check for notification permission on Android 13 (TIRAMISU) and above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 val intent = Intent("com.gvw.shortsblocker.REQUEST_NOTIFICATION_PERMISSION")
                 sendBroadcast(intent)
+                showNotification()
             } else {
-                // Permission granted, proceed with the notification
                 showNotification()
             }
         } else {
-            // For Android versions below TIRAMISU, no need for permission check
             showNotification()
         }
     }
 
     private fun showNotification() {
-        // Create a simple notification with an icon for the status bar
         val notificationIntent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             this, 0, notificationIntent, PendingIntent.FLAG_IMMUTABLE
         )
 
         val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setAllowSystemGeneratedContextualActions(true)
             .setContentTitle("ShortsBlocker is Running")
             .setContentText("Blocking short videos in the background")
-            .setSmallIcon(R.drawable.ic_status_icon) // Ensure this is a valid icon
+            .setSmallIcon(R.drawable.ic_status_icon)
             .setContentIntent(pendingIntent)
-            .setPriority(NotificationCompat.PRIORITY_HIGH) // Use HIGH priority
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC) // Make it visible
-            .setOngoing(true) // Prevent users from dismissing it
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+            .setOngoing(true)
             .build()
-
-        // Start the foreground service to show the icon in the status bar
         startForeground(NOTIFICATION_ID, notification)
     }
 }
