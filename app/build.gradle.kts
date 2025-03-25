@@ -13,8 +13,8 @@ android {
         applicationId = "com.gvw.shortsblocker"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1000
-        versionName = "1.1.0"
+        versionCode = project.property("VERSION_CODE").toString().toInt()
+        versionName = project.property("VERSION_NAME").toString()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
